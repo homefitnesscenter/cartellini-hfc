@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Editor Cartelli Prezzo - HFC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,500;0,700;0,900;1,800;1,900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #121214;
+    color: #F4F2EE;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* --- SIDEBAR CONTROLLI --- */
+  .sidebar {
+    width: 430px;
+    background: #0B0B0B;
+    border-right: 1px solid #27272A;
+    padding: 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar h1 {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #E3000F;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-print {
+    background: #E3000F;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .btn-print:hover { background: #c2000d; }
+
+  .card-panel {
+    background: #16161A;
+    border: 1px solid #27272A;
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .card-panel h2 {
+    font-size: 13px;
+    color: #E3000F;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .logo-upload-box {
+    background: #1F1F24;
+    border: 1px dashed #3F3F46;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .logo-upload-box input[type="file"] {
+    font-size: 11px;
+    color: #A1A1AA;
+    width: 100%;
+  }
+
+  .btn-clear-logo {
+    background: #27272A;
+    color: #E4E4E7;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-clear-logo:hover { background: #3F3F46; }
+
+  .title-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #A1A1AA;
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .spec-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .spec-row-input {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 6px;
+  }
+
+  .price-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #27272A;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: #0B0B0B;
+    border: 1px solid #3F3F46;
+    color: #F4F2EE;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12.5px;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #E3000F;
+  }
+
+  /* --- AREA FOGLIO (612 x 792 pt esattamente come da SVG Illustrator) --- */
+  .workspace {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: auto;
+  }
+
+  .sheet-container {
+    width: 612px;
+    height: 792px;
+    background: #FFFFFF;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.65);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .sheet-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Stili tipografici identici al tuo SVG Illustrator */
+  .dyn-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 28.25px;
+    font-weight: 900;
+    font-style: italic;
+    fill: #010101;
+    letter-spacing: -0.02em;
+  }
+  .dyn-slash {
+    font-family: 'Geist', sans-serif;
+    font-size: 28.25px;
+    font-weight: 700;
+    font-style: normal;
+    fill: #e11214;
+    letter-spacing: -0.08em;
+  }
+  .dyn-label {
+    font-family: 'Geist', sans-serif;
+    font-size: 22.6px;
+    font-weight: 500;
+    font-style: normal;
+    fill: #010101;
+    letter-spacing: -0.01em;
+  }
+  .dyn-val {
+    font-family: 'Geist', sans-serif;
+    font-size: 22.6px;
+    font-weight: 800;
+    font-style: italic;
+    fill: #010101;
+    letter-spacing: -0.01em;
+  }
+  .dyn-line {
+    stroke: #010101;
+    stroke-width: 1px;
+    stroke-linecap: round;
+  }
+  .dyn-price {
+    font-family: 'Geist', sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    font-style: italic;
+    fill: #010101;
+  }
+  .dyn-price.red {
+    fill: #e10f14;
+  }
+
+  @media print {
+    @page {
+      size: 612pt 792pt;
+      margin: 0;
+    }
+    body {
+      background: #fff;
+      height: auto;
+      overflow: visible;
+    }
+    .sidebar { display: none !important; }
+    .workspace { padding: 0; display: block; }
+    .sheet-container {
+      box-shadow: none;
+      width: 612pt;
+      height: 792pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h1>
+      <span>HFC // Cartelli Prezzo</span>
+    </h1>
+
+    <button class="btn-print" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+
+    <!-- CARTELLINO SUPERIORE -->
+    <div class="card-panel">
+      <h2>Cartellino Superiore (Prodotto 1)</h2>
+      
+      <span class="field-label">Logo Marchio in alto a SX (PNG / SVG / JPG)</span>
+      <div class="logo-upload-box">
+        <input type="file" id="c1-logo-input" accept="image/*">
+        <button type="button" class="btn-clear-logo" onclick="clearBrandLogo(1)">Rimuovi</button>
+      </div>
+
+      <div class="title-inputs">
+        <div>
+          <span class="field-label">Brand (Prima di //)</span>
+          <input type="text" id="c1-brand" value="TEKKFIT">
+        </div>
+        <div>
+          <span class="field-label">Modello (Dopo //)</span>
+          <input type="text" id="c1-model" value="AIR ROWER">
+        </div>
+      </div>
+
+      <span class="field-label">Caratteristiche (Etichetta SX / Valore DX)</span>
+      <div class="spec-grid" id="c1-specs">
+        <div class="spec-row-input"><input type="text" value="Resistenza ad Aria"><input type="text" value="10 Liv"></div>
+        <div class="spec-row-input"><input type="text" value="Sistema trazione"><input type="text" value="Catena"></div>
+        <div class="spec-row-input"><input type="text" value="Peso prodotto"><input type="text" value="32 Kg"></div>
+        <div class="spec-row-input"><input type="text" value="Peso max utente"><input type="text" value="150 kG"></div>
+        <div class="spec-row-input"><input type="text" value="Struttura"><input type="text" value="Pieghevole"></div>
+        <div class="spec-row-input"><input type="text" value="Dimensioni"><input type="text" value="240x62x113 cm"></div>
+      </div>
+
+      <div class="price-inputs">
+        <div>
+          <span class="field-label">Listino (Opzionale)</span>
+          <input type="text" id="c1-listino" placeholder="Vuoto = a mano">
+        </div>
+        <div>
+          <span class="field-label">Sconto Web (Opzionale)</span>
+          <input type="text" id="c1-sconto" placeholder="Vuoto = a mano">
+        </div>
+      </div>
+    </div>
+
+    <!-- CARTELLINO INFERIORE -->
+    <div class="card-panel">
+      <h2>Cartellino Inferiore (Prodotto 2)</h2>
+
+      <span class="field-label">Logo Marchio in alto a SX (PNG / SVG / JPG)</span>
+      <div class="logo-upload-box">
+        <input type="file" id="c2-logo-input" accept="image/*">
+        <button type="button" class="btn-clear-logo" onclick="clearBrandLogo(2)">Rimuovi</button>
+      </div>
+
+      <div class="title-inputs">
+        <div>
+          <span class="field-label">Brand (Prima di //)</span>
+          <input type="text" id="c2-brand" value="TOORX">
+        </div>
+        <div>
+          <span class="field-label">Modello (Dopo //)</span>
+          <input type="text" id="c2-model" value="SKX-AIRMAG-7000">
+        </div>
+      </div>
+
+      <span class="field-label">Caratteristiche (Etichetta SX / Valore DX)</span>
+      <div class="spec-grid" id="c2-specs">
+        <div class="spec-row-input"><input type="text" value="Resistenza Aria/Mag"><input type="text" value="16 Liv"></div>
+        <div class="spec-row-input"><input type="text" value="Sistema frenante"><input type="text" value="Ibrido"></div>
+        <div class="spec-row-input"><input type="text" value="Peso prodotto"><input type="text" value="43,6 Kg"></div>
+        <div class="spec-row-input"><input type="text" value="Peso max utente"><input type="text" value="150 kG"></div>
+        <div class="spec-row-input"><input type="text" value="Installazione"><input type="text" value="Pedana / Muro"></div>
+        <div class="spec-row-input"><input type="text" value="Dimensioni"><input type="text" value="59x127x218 cm"></div>
+      </div>
+
+      <div class="price-inputs">
+        <div>
+          <span class="field-label">Listino (Opzionale)</span>
+          <input type="text" id="c2-listino" placeholder="Vuoto = a mano">
+        </div>
+        <div>
+          <span class="field-label">Sconto Web (Opzionale)</span>
+          <input type="text" id="c2-sconto" placeholder="Vuoto = a mano">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANTEPRIMA STAMPA -->
+  <div class="workspace">
+    <div class="sheet-container" id="sheetContainer">
+      <svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 792">
+        <g id="templateBase">
+          <!-- ================= CARTELLINO 1 (SUPERIORE) ================= -->
+          <rect x="43.8" y="20" width="524.41" height="369.58" fill="#fff" stroke="#4a494a" stroke-miterlimit="10"/>
+          
+          <!-- Logo Brand Utente in alto a SX (Dinamico) -->
+          <image id="c1-brand-logo" x="67.62" y="36.03" width="96.66" height="22.25" preserveAspectRatio="xMinYMid meet" />
+          
+          <!-- Logo HFC Fisso in alto a DX (Caricato da "HFC N.png" nella stessa cartella) -->
+          <image href="HFC.png" x="395" y="31" width="150" height="32" preserveAspectRatio="xMaxYMid meet" />
+
+          <!-- Box Listino e Sconto Web -->
+          <path d="M116.49,322.55c-6.26,0-11.34,5.08-11.34,11.34v24.03c0,6.26,5.08,11.34,11.34,11.34h104.91c6.26,0,11.34-5.08,11.34-11.34v-24.03c0-6.26-5.08-11.34-11.34-11.34h-28.78" fill="none" stroke="#010101" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M389.86,322.55c-6.26,0-11.34,5.08-11.34,11.34v24.03c0,6.26,5.08,11.34,11.34,11.34h104.91c6.26,0,11.34-5.08,11.34-11.34v-24.03c0-6.26-5.08-11.34-11.34-11.34h-17.44" fill="none" stroke="#e10f14" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="119" y="329.5" class="dyn-label">Listino</text>
+          <text x="391.26" y="312.83" class="dyn-val" style="fill:#e10f14;"><tspan x="391.26" dy="0">Sconto</tspan><tspan x="391.26" dy="18">Web</tspan></text>
+
+          <!-- ================= CARTELLINO 2 (INFERIORE) ================= -->
+          <rect x="43.8" y="402.42" width="524.41" height="369.58" fill="#fff" stroke="#4a494a" stroke-miterlimit="10"/>
+
+          <!-- Logo Brand Utente in alto a SX (Dinamico) -->
+          <image id="c2-brand-logo" x="67.62" y="418.44" width="96.66" height="22.25" preserveAspectRatio="xMinYMid meet" />
+
+          <!-- Logo HFC Fisso in alto a DX (Caricato da "HFC N.png" nella stessa cartella) -->
+          <image href="HFC%20N.png" x="395" y="413.42" width="150" height="32" preserveAspectRatio="xMaxYMid meet" />
+
+          <!-- Box Listino e Sconto Web -->
+          <path d="M116.49,704.96c-6.26,0-11.34,5.08-11.34,11.34v24.03c0,6.26,5.08,11.34,11.34,11.34h104.91c6.26,0,11.34-5.08,11.34-11.34v-24.03c0-6.26-5.08-11.34-11.34-11.34h-28.78" fill="none" stroke="#010101" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M389.86,704.96c-6.26,0-11.34,5.08-11.34,11.34v24.03c0,6.26,5.08,11.34,11.34,11.34h104.91c6.26,0,11.34-5.08,11.34-11.34v-24.03c0-6.26-5.08-11.34-11.34-11.34h-17.44" fill="none" stroke="#e10f14" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="119" y="711.91" class="dyn-label">Listino</text>
+          <text x="392.43" y="696.27" class="dyn-val" style="fill:#e10f14;"><tspan x="392.43" dy="0">Sconto</tspan><tspan x="392.43" dy="18">Web</tspan></text>
+        </g>
+        <g id="dynamicLayer"></g>
+      </svg>
+    </div>
+  </div>
+
+<script>
+  const CARD1_CONFIG = {
+    titleY: 100.64,
+    startY: 135.85,
+    lineStartY: 136.21,
+    stepY: 27.12,
+    priceY: 353
+  };
+
+  const CARD2_CONFIG = {
+    titleY: 483.06,
+    startY: 518.27,
+    lineStartY: 518.63,
+    stepY: 27.12,
+    priceY: 735.4
+  };
+
+  const LEFT_X = 103.2;
+  const RIGHT_X = 508.7;
+
+  function createSvgEl(tag, attrs) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  // Gestione caricamento logo marchio in alto a sinistra per ciascun cartellino
+  function setupBrandLogoUploader(cardNum) {
+    const fileInput = document.getElementById(`c${cardNum}-logo-input`);
+    const imgTarget = document.getElementById(`c${cardNum}-brand-logo`);
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        imgTarget.setAttribute('href', ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function clearBrandLogo(cardNum) {
+    document.getElementById(`c${cardNum}-logo-input`).value = '';
+    document.getElementById(`c${cardNum}-brand-logo`).removeAttribute('href');
+  }
+
+  function renderCard(prefix, cfg, dynGroup) {
+    const brand = document.getElementById(`${prefix}-brand`).value.trim();
+    const model = document.getElementById(`${prefix}-model`).value.trim();
+
+    // Titolo centrato a X=306 con "//" in Geist-Bold rosso (#e11214)
+    const titleEl = createSvgEl('text', {
+      x: '306',
+      y: cfg.titleY,
+      'text-anchor': 'middle',
+      class: 'dyn-title'
+    });
+
+    const tBrand = createSvgEl('tspan', {});
+    tBrand.textContent = brand + ' ';
+    const tSlash = createSvgEl('tspan', { class: 'dyn-slash' });
+    tSlash.textContent = '//';
+    const tModel = createSvgEl('tspan', {});
+    tModel.textContent = ' ' + model;
+
+    titleEl.appendChild(tBrand);
+    titleEl.appendChild(tSlash);
+    titleEl.appendChild(tModel);
+    dynGroup.appendChild(titleEl);
+
+    // 6 righe caratteristiche + linee dinamiche calcolate sulla larghezza reale del testo
+    const rows = document.querySelectorAll(`#${prefix}-specs .spec-row-input`);
+    rows.forEach((row, i) => {
+      const inputs = row.querySelectorAll('input');
+      const labelText = inputs[0].value.trim();
+      const valText = inputs[1].value.trim();
+      if (!labelText && !valText) return;
+
+      const yText = (cfg.startY + i * cfg.stepY).toFixed(2);
+      const yLine = (cfg.lineStartY + i * cfg.stepY).toFixed(2);
+
+      const labelEl = createSvgEl('text', {
+        x: LEFT_X,
+        y: yText,
+        class: 'dyn-label'
+      });
+      labelEl.textContent = labelText;
+      dynGroup.appendChild(labelEl);
+
+      const valEl = createSvgEl('text', {
+        x: RIGHT_X,
+        y: yText,
+        'text-anchor': 'end',
+        class: 'dyn-val'
+      });
+      valEl.textContent = valText;
+      dynGroup.appendChild(valEl);
+
+      requestAnimationFrame(() => {
+        const lBox = labelEl.getBBox();
+        const vBox = valEl.getBBox();
+        const x1 = lBox.x + lBox.width + 6;
+        const x2 = vBox.x - 6;
+        if (x2 > x1 + 10) {
+          const lineEl = createSvgEl('line', {
+            x1: x1.toFixed(2),
+            y1: yLine,
+            x2: x2.toFixed(2),
+            y2: yLine,
+            class: 'dyn-line'
+          });
+          dynGroup.appendChild(lineEl);
+        }
+      });
+    });
+
+    // Prezzi opzionali dentro i box Listino e Sconto Web
+    const listinoVal = document.getElementById(`${prefix}-listino`).value.trim();
+    const scontoVal = document.getElementById(`${prefix}-sconto`).value.trim();
+
+    if (listinoVal) {
+      const pListino = createSvgEl('text', {
+        x: '168.9',
+        y: cfg.priceY,
+        'text-anchor': 'middle',
+        class: 'dyn-price'
+      });
+      pListino.textContent = listinoVal;
+      dynGroup.appendChild(pListino);
+    }
+
+    if (scontoVal) {
+      const pSconto = createSvgEl('text', {
+        x: '442.3',
+        y: cfg.priceY,
+        'text-anchor': 'middle',
+        class: 'dyn-price red'
+      });
+      pSconto.textContent = scontoVal;
+      dynGroup.appendChild(pSconto);
+    }
+  }
+
+  function updateAll() {
+    const dynGroup = document.getElementById('dynamicLayer');
+    if (!dynGroup) return;
+    dynGroup.innerHTML = '';
+    renderCard('c1', CARD1_CONFIG, dynGroup);
+    renderCard('c2', CARD2_CONFIG, dynGroup);
+  }
+
+  setupBrandLogoUploader(1);
+  setupBrandLogoUploader(2);
+
+  document.querySelectorAll('input[type="text"]').forEach(inp => {
+    inp.addEventListener('input', updateAll);
+  });
+
+  document.fonts.ready.then(updateAll);
+</script>
+</body>
+</html>
